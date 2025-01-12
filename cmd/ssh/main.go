@@ -4,11 +4,11 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/kmhalvin/comet"
+	"github.com/kmhalvin/comet/pkg/banner"
 	"github.com/kmhalvin/comet/pkg/cometlauncher"
 	"github.com/kmhalvin/comet/pkg/tui"
 	"net"
@@ -28,10 +28,7 @@ const (
 	port = "22"
 )
 
-//go:embed banner.txt
-var banner string
-
-// example usage: ssh -R 1:localhost:9222 -p 2022 localhost
+// example usage: ssh -R 1:localhost:8080 -p 2022 localhost
 
 func main() {
 	// Create a new SSH ForwardedTCPHandler.
@@ -41,9 +38,7 @@ func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath("/.ssh/id_ed25519"),
-		wish.WithBannerHandler(func(ctx ssh.Context) string {
-			return fmt.Sprintf(banner, ctx.User())
-		}),
+		wish.WithBannerHandler(banner.CometWelcome),
 		func(s *ssh.Server) error {
 			// Set the Reverse TCP Handler up:
 			s.ReversePortForwardingCallback = func(_ ssh.Context, bindHost string, bindPort uint32) bool {

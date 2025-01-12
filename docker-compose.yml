@@ -3,3 +3,12 @@ services:
     build: .
     ports:
       - "2022:22"
+      - "1001:1001"
+      - "1002:1002"
+      - "1003:1003"
+  sample_app:
+    image: nginx:stable
+    ports:
+      - "8080:80"
+    volumes:
+      - ./pkg/banner:/usr/share/nginx/html:ro

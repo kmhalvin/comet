@@ -115,8 +115,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if !m.state.forwarded {
 		return "Forward your desired port in order to use this terminal, example:\n" +
-			"    ssh -R 1:localhost:9222 -p 2022 localhost\n" +
-			"localhost:9222 will be forwarded to comet"
+			"    ssh -R 1:localhost:8080 -p 2022 localhost\n" +
+			"localhost:8080 will be forwarded to comet"
 	}
 
 	return m.ControlView()

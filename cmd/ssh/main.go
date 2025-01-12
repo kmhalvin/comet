@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/kmhalvin/comet"
+	"github.com/kmhalvin/comet/pkg/cometlauncher"
 	"github.com/kmhalvin/comet/pkg/tui"
 	"net"
 	"os"
@@ -34,10 +35,9 @@ var banner string
 
 func main() {
 	// Create a new SSH ForwardedTCPHandler.
-	forwardHandler, err := comet.NewForwardedTCPHandler()
-	if err != nil {
-		panic(err)
-	}
+	forwardHandler := comet.NewForwardedTCPHandler()
+	launcher := cometlauncher.NewLauncher(forwardHandler, 1001, 1003)
+
 	s, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath("/.ssh/id_ed25519"),
@@ -64,7 +64,7 @@ func main() {
 				// tea.WithAltScreen) on a session by session basis.
 				func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 					renderer := bubbletea.MakeRenderer(s)
-					model, err := tui.NewModel(s.Context(), renderer, forwardHandler)
+					model, err := tui.NewModel(s.Context(), renderer, forwardHandler, launcher)
 					if err != nil {
 						return nil, []tea.ProgramOption{}
 					}

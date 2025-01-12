@@ -46,20 +46,22 @@ type Handler interface {
 // adding the HandleSSHRequest callback to the server's RequestHandlers under
 // tcpip-forward and cancel-tcpip-forward.
 type forwardedTCPHandler struct {
-	forwards map[ssh.Context]*remoteForwardRequest
+	forwards map[ssh.Context]remoteForwardRequest
 	sync.Mutex
 }
 
 var _ Handler = (*forwardedTCPHandler)(nil)
 
-func NewForwardedTCPHandler() (*forwardedTCPHandler, error) {
-	h := &forwardedTCPHandler{forwards: make(map[ssh.Context]*remoteForwardRequest)}
-	return h, nil
+func NewForwardedTCPHandler() *forwardedTCPHandler {
+	h := &forwardedTCPHandler{forwards: make(map[ssh.Context]remoteForwardRequest)}
+	return h
 }
 
 func (h *forwardedTCPHandler) HasForwarded(ctx ssh.Context) bool {
-	f := h.forwards[ctx]
-	return f != nil
+	h.Lock()
+	_, ok := h.forwards[ctx]
+	h.Unlock()
+	return ok
 }
 
 func (h *forwardedTCPHandler) innerOpenConn(ctx ssh.Context, originAddr string, originPort uint32) (gossh.Channel, error) {
@@ -119,7 +121,7 @@ func (h *forwardedTCPHandler) HandleSSHRequest(ctx ssh.Context, srv *ssh.Server,
 		}
 		addr := net.JoinHostPort(reqPayload.BindAddr, strconv.Itoa(int(reqPayload.BindPort)))
 		h.Lock()
-		h.forwards[ctx] = &reqPayload
+		h.forwards[ctx] = reqPayload
 		h.Unlock()
 		go func() {
 			<-ctx.Done()

@@ -156,7 +156,7 @@ func (m model) ControlView() string {
 		}
 		icon := ""
 		if item.User != "empty" {
-			icon = "☄️"
+			icon = "☄"
 		}
 		icon = m.theme.Base().Width(5).Render(icon)
 

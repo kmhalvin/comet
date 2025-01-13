@@ -4,7 +4,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/ssh"
-	"github.com/kmhalvin/comet"
 	"github.com/kmhalvin/comet/pkg/cometlauncher"
 	"github.com/kmhalvin/comet/pkg/tui/theme"
 	"math"
@@ -19,7 +18,6 @@ type model struct {
 	broadcastMsg    chan tea.Msg
 	ctx             ssh.Context
 	renderer        *lipgloss.Renderer
-	handler         comet.Handler
 	controlClient   *cometlauncher.Launcher
 	state           state
 	control         []cometlauncher.PortInfo
@@ -35,17 +33,16 @@ type model struct {
 func NewModel(
 	ctx ssh.Context,
 	renderer *lipgloss.Renderer,
-	handler comet.Handler,
+	forwarded bool,
 	controlClient *cometlauncher.Launcher,
 ) (tea.Model, error) {
 	return &model{
 		broadcastMsg:  make(chan tea.Msg),
 		ctx:           ctx,
 		renderer:      renderer,
-		handler:       handler,
 		controlClient: controlClient,
 		state: state{
-			forwarded: handler.HasForwarded(ctx),
+			forwarded: forwarded,
 			control: controlState{
 				selected: 0,
 			},
@@ -57,12 +54,12 @@ func NewModel(
 
 type listenerMsg struct{ tea.Msg }
 
-func (m model) listenLauncherEvent() tea.Msg {
+func (m model) listenBroadcast() tea.Msg {
 	return listenerMsg{<-m.broadcastMsg}
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.listenLauncherEvent, m.broadcastRefreshControlEvent)
+	return tea.Batch(m.listenBroadcast, m.broadcastRefreshControlEvent)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -70,7 +67,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if lm, ok := msg.(listenerMsg); ok {
 		msg = lm.Msg
-		tcmds = append(tcmds, m.listenLauncherEvent)
+		tcmds = append(tcmds, m.listenBroadcast)
 	}
 
 	switch msg := msg.(type) {

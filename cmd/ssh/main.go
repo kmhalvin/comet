@@ -59,7 +59,7 @@ func main() {
 				// tea.WithAltScreen) on a session by session basis.
 				func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 					renderer := bubbletea.MakeRenderer(s)
-					model, err := tui.NewModel(s.Context(), renderer, forwardHandler, launcher)
+					model, err := tui.NewModel(s.Context(), renderer, forwardHandler.HasForwarded(s.Context()), launcher)
 					if err != nil {
 						return nil, []tea.ProgramOption{}
 					}

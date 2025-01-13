@@ -51,9 +51,7 @@ func (l *Launcher) AddPortCallback(ctx ssh.Context, f func()) {
 	l.portCallback[ctx] = f
 	go func() {
 		<-ctx.Done()
-		l.Lock()
-		defer l.Unlock()
-		delete(l.portCallback, ctx)
+		l.RemovePortCallback(ctx)
 	}()
 }
 
